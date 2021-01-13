@@ -121,6 +121,8 @@ FD - disable EVSE
 FE - enable EVSE
  $FE*AF
 FP x y text - print text on lcd display
+  substitute character 0x01 for spaces within a string. LCD display code
+  replaces 0x01 with spaces
 FR - restart EVSE
  $FR*BC
 FS - sleep EVSE
@@ -446,7 +448,7 @@ extern EvseI2cRapiProcessor g_EIRP;
 
 void RapiInit();
 void RapiDoCmd();
-void RapiSendEvseState(uint8_t nodupe=1);
+uint8_t RapiSendEvseState(uint8_t force=0);
 void RapiSetWifiMode(uint8_t mode);
 void RapiSendButtonPress(uint8_t long_press);
 void RapiSendBootNotification();
