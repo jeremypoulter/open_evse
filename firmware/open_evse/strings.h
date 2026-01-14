@@ -22,10 +22,15 @@
 
 #pragma once
 
+// Include pgmspace.h early for native builds to ensure PROGMEM is defined
+#ifdef EPOXY_DUINO
+#include <avr/pgmspace.h>
+#endif
+
 extern const char VERSTR[] PROGMEM;
-inline void GetVerStr(char *buf) {
-  strcpy_P(buf,VERSTR);
-}
+
+// Forward declare the function, define it in cpp to avoid header ordering issues
+void GetVerStr(char *buf);
 
 
 #if defined(BTN_MENU) || defined(SHOW_DISABLED_TESTS)

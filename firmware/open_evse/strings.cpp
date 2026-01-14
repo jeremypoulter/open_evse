@@ -23,6 +23,11 @@
 
 const char VERSTR[] PROGMEM = VERSION;
 
+// GetVerStr implementation (declared in strings.h)
+void GetVerStr(char *buf) {
+  strcpy_P(buf, VERSTR);
+}
+
 
 #if defined(BTN_MENU) || defined(SHOW_DISABLED_TESTS)
 const char g_psSettings[] PROGMEM = STR_SETTINGS;

@@ -54,7 +54,10 @@
 
 #include "Language_default.h"   //Default language should always be included as bottom layer
 
+// Only define time_t if not already defined (avoid conflicts with system time.h)
+#ifndef EPOXY_DUINO
 typedef unsigned long time_t;
+#endif
 
 //Language preferences: Add your custom languagefile here. See Language_default.h for more info.
 //#include "Language_norwegian.h"

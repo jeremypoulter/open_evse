@@ -178,13 +178,16 @@ pip-log.txt
 #############
 Platformio
 ############
+.pio
 .pioenvs
 .piolibdeps
 .clang_complete
 .gcc-flags.json
+
 
 # VS Code
 .vscode
 
 # build files
 .hex
+epoxyeepromdata

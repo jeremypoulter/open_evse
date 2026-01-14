@@ -21,6 +21,10 @@
 #define twi_h
 
   #include <inttypes.h>
+  
+  #ifdef EPOXY_DUINO
+  #include <avr/io.h>
+  #endif
 
   //#define ATMEGA8
 
