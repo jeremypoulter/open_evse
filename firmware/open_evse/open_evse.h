@@ -42,7 +42,7 @@
 #define clrBits(flags,bits) (flags &= ~(bits))
 
 #ifndef VERSION
-#define VERSION "D9.1.0"
+#define VERSION "D9.4.1"
 #endif // !VERSION
 
 #include "Language_default.h"   //Default language should always be included as bottom layer
@@ -126,6 +126,10 @@ extern bool g_hasCGMI;
 // auto detect ampacity by PP pin resistor
 // #define PP_AUTO_AMPACITY
 
+// monitor NTC thermistors in the EV/input cables via the PP/PP2 analog inputs
+// n.b. shares PP_READ with PP_AUTO_AMPACITY - see CableTempMonitor.h
+//#define CABLE_TEMPERATURE_MONITORING
+
 // charge for a specified amount of time and then stop
 #define TIME_LIMIT
 
@@ -195,6 +199,12 @@ extern AutoCurrentCapacityController g_ACCController;
 // if not defined, and TEMPERATURE_MONITORING is enabled, then only
 // TEMPERATURE_AMBIENT_PANIC is checked
 //#define TEMPERATURE_THROTTLING
+
+// CABLE_TEMPERATURE_MONITORING adds NTC thermistor monitoring of the EV
+// (output) and input (supply) cables on the PP/PP2 analog inputs. Entirely
+// separate from the enclosure sensors above: its own enable ($FF C), its own
+// per-source shutdown thresholds and its own RAPI commands ($SN/$GN).
+// n.b. PP_READ is shared with PP_AUTO_AMPACITY - only one may own it.
 
 
 //#define HEARTBEAT_SUPERVISION // Heartbeat Supervision support
@@ -368,6 +378,11 @@ extern AutoCurrentCapacityController g_ACCController;
 // confirm the relay physically reached the commanded state, timed from when
 // the coil was driven. Diagnostic only - never blocks/gates charging logic.
 #define RELAY_TRANSIT_TIMEOUT_MS  300
+// m_LastRelayOpenCurrentMa value meaning "not measured". Used by the
+// emergency open path, which must release the relay coil immediately and so
+// cannot afford readAmmeter()'s CURRENT_SAMPLE_INTERVAL ms sampling window
+// first. Negative, so it can never be mistaken for a real reading.
+#define RELAY_OPEN_CURRENT_UNKNOWN (-1L)
 #endif // RELAY_ZC_SWITCH
 
 // RELAY_HEALTH - relay contact-life estimation, built on the RELAY_ZC_SWITCH
@@ -535,6 +550,11 @@ extern AutoCurrentCapacityController g_ACCController;
 #define TMP_BUF_GI_REPLYLEN (3 + 1 + (2*MCU_ID_LEN) + 4 + 4 + 1)
 #if defined(MCU_ID_LEN) && (TMP_BUF_GI_REPLYLEN > ((LCD_MAX_CHARS_PER_LINE+1)*2))
 #define TMP_BUF_SIZE 48
+#elif defined(CABLE_TEMPERATURE_MONITORING)
+// $GN reports four cable temperatures; its worst case is four 5-character
+// sentinels plus separators (23 chars), 2 longer than $GS, so the AVR buffer
+// grows by 2 bytes for builds that include the feature.
+#define TMP_BUF_SIZE ((LCD_MAX_CHARS_PER_LINE+1)*2 + 2)
 #else
 #define TMP_BUF_SIZE ((LCD_MAX_CHARS_PER_LINE+1)*2)
 #endif
@@ -637,6 +657,12 @@ extern AutoCurrentCapacityController g_ACCController;
 // stuck-relay auto-recovery
 #define EOFS_STUCK_RELAY_RECOVERY_CNT    56 // 2 bytes - cumulative count of stuck-relay recovery attempts run; 0xffff = unformatted, treat as 0
 
+// cable NTC thermistor temperature monitoring (CABLE_TEMPERATURE_MONITORING)
+#define EOFS_CABLE_TEMP_FLAGS 58 // 1 byte  - CTMF_ENABLED; 0xff = unformatted, feature off
+#define EOFS_CABLE_TEMP_CFG   59 // 4 sensors x CABLE_TEMP_CFG_EEPROM_SIZE (9) bytes = 36 bytes (59..94)
+                                 // per sensor: r25(2) beta(2) offset(2) panic(2) pin(1)
+// next free offset: 95
+
 #define EOFS_MAX_HW_CURRENT_CAPACITY 511 // 1 byte
 
 
@@ -646,6 +672,21 @@ extern AutoCurrentCapacityController g_ACCController;
 // must transition to state A from contacts closed in < 100ms according to spec
 // but Leaf sometimes bounces from 3->1 so we will debounce it a little anyway
 #define DELAY_STATE_TRANSITION_A 25
+
+// Leaving an active charge (state C) for vent-required (D) or connected (B).
+// Deliberately much slower than DELAY_STATE_TRANSITION: neither is an
+// emergency - a genuine vent-required condition persists, and anything
+// actually urgent (GFI, diode failure, over-temperature, stuck relay) has its
+// own fault path that does NOT come through here - so a false positive from
+// pilot noise costs an interrupted charge session, while being slow costs
+// nothing. Unplug (C->A) is unaffected: it is matched earlier and keeps
+// DELAY_STATE_TRANSITION_A.
+#define DELAY_STATE_TRANSITION_FROM_C 2000
+// ...and require this many consecutive agreeing reads as well as the elapsed
+// time, so the transition cannot be satisfied by a couple of samples if
+// Update() happens to be running slowly. Each read is already a
+// PILOT_LOOP_CNT-sample min/max sweep inside ReadPilot().
+#define STATE_TRANSITION_FROM_C_MIN_SAMPLES 32
 
 // for ADVPWR
 #define GROUND_CHK_DELAY  1000 // delay after charging started to test, ms
@@ -1043,6 +1084,10 @@ public:
 #endif //TEMPERATURE_MONITORING_NY
 };
 #endif // TEMPERATURE_MONITORING
+
+// n.b. must precede J1772EvseController.h - its inline EnablePPAutoAmpacity()
+// reaches into g_CableTempMonitor to take PP_READ back
+#include "CableTempMonitor.h"
 
 #include "J1772Pilot.h"
 #include "J1772EvseController.h"
