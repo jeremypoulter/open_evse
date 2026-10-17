@@ -46,6 +46,7 @@
 #define CURRENT_PIN     0 // ammeter CT
 #define PILOT_SENSE_PIN 1 // pilot voltage feedback
 #define PP_PIN          2 // proximity pilot
+#define PP2_PIN         3 // second proximity pilot (cable NTC thermistor input)
 
 // Deliberately left undefined, as on the SAMD target: RED_LED_REG,
 // GREEN_LED_REG, BTN_REG, SLEEP_STATUS_REG, AUTH_LOCK_REG, VOLTMETER_PIN.
@@ -54,4 +55,4 @@
 // Total number of digital pins the block must hold. Keep in step with the
 // highest *_REG above.
 #define NATIVE_DIGITAL_PIN_COUNT 12
-#define NATIVE_ADC_PIN_COUNT      3
+#define NATIVE_ADC_PIN_COUNT      4

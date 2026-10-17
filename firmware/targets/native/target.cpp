@@ -281,6 +281,7 @@ void initTarget()
   nativeSetAdc(PILOT_SENSE_PIN, ADC_MAX, ADC_MAX);
   nativeSetAdc(CURRENT_PIN, ADC_HALF, ADC_HALF);
   nativeSetAdc(PP_PIN, ADC_MAX, ADC_MAX);
+  nativeSetAdc(PP2_PIN, ADC_MAX, ADC_MAX);
   // Digital inputs are deliberately not preset here. J1772EVSEController::Init
   // runs after this and calls DigitalPin::init(..., INP_PU) on the AC-sense and
   // GFI lines, which sets them to the pull-up state -- anything written here

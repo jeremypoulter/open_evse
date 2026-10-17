@@ -51,6 +51,7 @@ const Signal kAdc[] = {
   { "CURRENT",     CURRENT_PIN     },
   { "PILOT_SENSE", PILOT_SENSE_PIN },
   { "PP",          PP_PIN          },
+  { "PP2",         PP2_PIN         },
 };
 
 constexpr size_t kDigitalInCount  = sizeof(kDigitalIn)  / sizeof(kDigitalIn[0]);
