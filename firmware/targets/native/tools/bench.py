@@ -261,6 +261,11 @@ class Bench:
         mid = int(self.hello.get("adc_max", 1023)) // 2
         self.send("ADC CURRENT %d %d" % (mid + counts_peak, mid - counts_peak))
 
+    def set_temperature(self, sensor, c10):
+        """Supply a temperature sensor reading, in tenths of a degree C. The
+        host has no I2C bus, so this is the only way the firmware gets one."""
+        self.send("TEMP %s %s" % (sensor, c10))
+
     def gfi_trip(self):
         """A real earth fault, as opposed to the self-test coil."""
         self.gfi_detector = False

@@ -128,6 +128,28 @@ void nativeSetAdc(uint8_t pin, uint16_t high, uint16_t low)
   g_adc[pin].low  = low;
 }
 
+static struct { bool set; int16_t c10; } g_temp[NATIVE_TEMP_COUNT];
+
+void nativeSetTemperature(uint8_t sensor, int16_t c10)
+{
+  if (sensor >= NATIVE_TEMP_COUNT) return;
+  g_temp[sensor].c10 = c10;
+  g_temp[sensor].set = true;
+}
+
+void nativeClearTemperature(uint8_t sensor)
+{
+  if (sensor >= NATIVE_TEMP_COUNT) return;
+  g_temp[sensor].set = false;
+}
+
+bool nativeTemperature(uint8_t sensor, int16_t *c10)
+{
+  if (sensor >= NATIVE_TEMP_COUNT || !g_temp[sensor].set) return false;
+  *c10 = g_temp[sensor].c10;
+  return true;
+}
+
 // ---------------------------------------------------------------------------
 // MCU id
 // ---------------------------------------------------------------------------

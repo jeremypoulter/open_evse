@@ -23,6 +23,9 @@
 //     IN <NAME> <0|1>           drive a digital input
 //     ADC <NAME> <high> [low]   set an ADC channel; two values describe a
 //                               signal swinging between them, one a level
+//     TEMP <SENSOR> <tenths_C|OFF>
+//                               supply a temperature sensor reading
+//                               (MCP9808, DS3231, TMP007); OFF = not installed
 //     SNAP                      re-send HELLO and every current output
 //     PING
 //

@@ -138,4 +138,13 @@ uint8_t nativeGetDigitalOut(uint8_t pin);
 // which is what the firmware's peak-to-peak sampling needs. See target.cpp.
 void nativeSetAdc(uint8_t pin, uint16_t high, uint16_t low);
 
+// Temperature sensors. A real board reads these over I2C; the host has no bus,
+// so a driver supplies the reading instead. Values are tenths of a degree C,
+// as the firmware holds them. A sensor nobody has set stays "not installed".
+enum NativeTempSensor { NATIVE_TEMP_MCP9808, NATIVE_TEMP_DS3231, NATIVE_TEMP_TMP007, NATIVE_TEMP_COUNT };
+void nativeSetTemperature(uint8_t sensor, int16_t c10);
+void nativeClearTemperature(uint8_t sensor);
+// True and *c10 filled in if a driver has set this sensor.
+bool nativeTemperature(uint8_t sensor, int16_t *c10);
+
 void initTarget();

@@ -180,6 +180,26 @@ void handleLine(char *line)
     if (low  > ADC_MAX) low  = ADC_MAX;
     nativeSetAdc(s->pin, (uint16_t)high, (uint16_t)low);
   }
+  else if (strcmp(verb, "TEMP") == 0) {
+    // "TEMP <MCP9808|DS3231|TMP007> <tenths of C | OFF>"
+    static const struct { const char *name; uint8_t sensor; } kTemp[] = {
+      { "MCP9808", NATIVE_TEMP_MCP9808 },
+      { "DS3231",  NATIVE_TEMP_DS3231  },
+      { "TMP007",  NATIVE_TEMP_TMP007  },
+    };
+    const char *name = strtok(NULL, " \t");
+    const char *val  = strtok(NULL, " \t");
+    if (!name || !val) return;
+    const int count = (int)(sizeof(kTemp) / sizeof(kTemp[0]));
+    int i = 0;
+    while (i < count && strcmp(name, kTemp[i].name) != 0) i++;
+    if (i == count) {
+      sendLine("ERR unknown sensor %s", name);
+      return;
+    }
+    if (strcmp(val, "OFF") == 0) nativeClearTemperature(kTemp[i].sensor);
+    else nativeSetTemperature(kTemp[i].sensor, (int16_t)atoi(val));
+  }
   else if (strcmp(verb, "SNAP") == 0) {
     g_lastOutValid = false; // force a full republish
     sendSnapshot();

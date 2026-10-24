@@ -10,7 +10,7 @@ import pytest
 
 from bench import (
     STATE_B, STATE_C, STATE_GFCI_FAULT, STATE_GFI_TEST_FAILED,
-    STATE_NO_GROUND, STATE_STUCK_RELAY,
+    STATE_NO_GROUND, STATE_OVER_TEMPERATURE, STATE_STUCK_RELAY,
 )
 
 POSTCODE_OK = 0x00
@@ -105,3 +105,11 @@ def test_welded_relay_is_detected(charging):
     charging.weld_relay()
     charging.set_pilot("A")          # unplug, so the firmware opens the relay
     charging.wait_state(STATE_STUCK_RELAY)
+
+
+def test_over_temperature_opens_the_relay(charging):
+    """An enclosure sensor reading past the panic threshold must drop the
+    contactor. The host has no sensor, so the bench supplies the reading."""
+    charging.set_temperature("MCP9808", 950)   # 95.0C, well past the panic point
+    charging.wait_state(STATE_OVER_TEMPERATURE)
+    charging.wait_relay(closed=False)
